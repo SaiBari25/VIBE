@@ -225,10 +225,10 @@ export default function ImposterDrawing({ players, settings, onEnd, onPlayAgain 
         </div>
         <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">Pass phone to</p>
         
-        {/* Dynamic Name Sizing! */}
+        {/* --- FIX: DYNAMIC TEXT SCALING FOR LONG NAMES --- */}
         <h1 
-            className="font-display font-black text-white uppercase mb-12 tracking-tight w-full break-words px-2 leading-tight"
-            style={{ fontSize: `clamp(2rem, ${300 / playerName.length}px, 4rem)` }}
+            className="font-display font-black text-white uppercase mb-12 tracking-tight w-full whitespace-nowrap overflow-visible px-2 leading-tight"
+            style={{ fontSize: `clamp(1.5rem, ${25 / Math.max(playerName.length, 1)}rem, 4rem)` }}
         >
             {playerName}
         </h1>

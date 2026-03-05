@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { User, EyeOff, Clock, AlertTriangle } from 'lucide-react';
 import { IMPOSTER_DATA } from '../data/imposterWords'; 
 
@@ -64,15 +64,13 @@ const RoleCard = ({ role, secretWord, altWord, hint, imposters, settings }) => {
                 </div>
             </div>
 
-{/* 3. CARD INTERIOR WITH DYNAMIC BACKGROUND IMAGE */}
+            {/* 3. CARD INTERIOR WITH DYNAMIC BACKGROUND IMAGE */}
             <div className="absolute inset-[4px] rounded-[28px] bg-[#0a0a0a] overflow-hidden pointer-events-none z-20 shadow-[inset_0_0_20px_rgba(0,0,0,1)] border border-white/5">
-                {/* Background Image - TURNED UP BRIGHTNESS & OPACITY */}
                 <img 
                     src={bgImage} 
                     className={`w-full h-full object-cover transition-all duration-700 opacity-90 ${isImposter ? 'brightness-150 saturate-150 scale-105' : 'brightness-110 scale-105'}`} 
                     alt="Role Background"
                 />
-                {/* Lighter gradient overlay: dark at the top/bottom for text, clear in the middle for the character */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/80" />
             </div>
             
@@ -208,9 +206,15 @@ export default function ImposterGame({ players, settings, onEnd, onPlayAgain }) 
             <User size={40} className="text-white" />
         </div>
         <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">Pass phone to</p>
-        <h1 className="text-4xl sm:text-5xl font-display font-black text-white uppercase mb-12 tracking-tight truncate w-full px-2">
+        
+        {/* --- FIX: DYNAMIC TEXT SCALING FOR LONG NAMES --- */}
+        <h1 
+            className="font-display font-black text-white uppercase mb-12 tracking-tight whitespace-nowrap overflow-visible w-full px-2"
+            style={{ fontSize: `clamp(1.5rem, ${25 / Math.max(playerName.length, 1)}rem, 3rem)` }}
+        >
             {playerName}
         </h1>
+        
         <button onClick={() => setPhase('REVEAL_ROLE')} className="btn-primary w-full max-w-xs bg-white text-black border-none shadow-[0_0_20px_rgba(255,255,255,0.4)] flex items-center justify-center gap-3">
             <EyeOff size={20} /> I AM {playerName}
         </button>

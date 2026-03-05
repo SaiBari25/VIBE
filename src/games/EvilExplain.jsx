@@ -55,44 +55,44 @@ const TabooCard = ({ card, onSwipe, custom }) => {
             style={{ rotateX: tiltX, rotateY: tiltY, transformStyle: "preserve-3d" }}
             className="relative w-full rounded-[32px] p-[4px]"
         >
-            {/* 1. TRUE BACKGROUND GLOW */}
             <div className="absolute inset-0 rounded-[32px] overflow-visible pointer-events-none z-0">
-                {/* STRICT CENTERING WRAPPER (Fixes the wobble bug!) */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px]">
-                    {/* SPINNING ELEMENT */}
                     <div className="w-full h-full rounded-full animate-[spin_4s_linear_infinite] blur-[15px] opacity-25" style={{ background: borderGlow }} />
                 </div>
             </div>
 
-            {/* 2. SHARP LIGHT BORDER */}
             <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none z-10">
-                {/* STRICT CENTERING WRAPPER (Fixes the wobble bug!) */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px]">
-                    {/* SPINNING ELEMENT */}
                     <div className="w-full h-full rounded-full animate-[spin_4s_linear_infinite]" style={{ background: borderGlow }} />
                 </div>
             </div>
 
-            {/* 3. SOLID BLACK CARD INTERIOR */}
             <div className="absolute inset-[4px] rounded-[28px] bg-[#0a0a0a] pointer-events-none z-20 shadow-[inset_0_0_20px_rgba(0,0,0,1)] border border-white/5" />
             
-            {/* 4. TRUE 3D FLOATING CONTENT */}
             <div className="relative z-30 flex w-full flex-col items-stretch min-h-[400px] p-8" style={{ transformStyle: "preserve-3d" }}>
                 
-                {/* BULLETPROOF TEXT SCALING */}
-                <motion.div style={{ translateZ: 60 }} className="bg-white text-black w-full px-6 py-6 rounded-2xl mb-6 flex items-center justify-center min-h-[100px] shadow-[0_20px_40px_rgba(0,0,0,0.8)] pointer-events-none overflow-hidden">
+                {/* --- FIX: STRICT 1-LINE DYNAMIC SIZING --- */}
+                {/* overflow-hidden and whitespace-nowrap force it to stay on one line.
+                    The inline style calculates fontSize based on character count so it never breaks the box! */}
+                <motion.div style={{ translateZ: 60 }} className="bg-white text-black w-full px-2 py-4 rounded-2xl mb-6 flex items-center justify-center h-[100px] shadow-[0_20px_40px_rgba(0,0,0,0.8)] pointer-events-none overflow-hidden box-border">
                     <h2 
-                        className="font-display font-black uppercase leading-none whitespace-nowrap tracking-tighter text-center w-full"
-                        style={{ fontSize: `min(2.5rem, ${15 / card.word.length}rem)` }}
+                        className="font-display font-black uppercase leading-none whitespace-nowrap tracking-tighter"
+                        style={{ fontSize: `clamp(1rem, ${18 / Math.max(card.word.length, 1)}rem, 2.5rem)` }}
                     >
                         {card.word}
                     </h2>
                 </motion.div>
                 
-                <motion.div style={{ translateZ: 30 }} className="flex-1 flex flex-col justify-center gap-3 text-center w-full pointer-events-none">
+                <motion.div style={{ translateZ: 30 }} className="flex-1 flex flex-col justify-center gap-3 text-center w-full pointer-events-none overflow-hidden">
                     <p className="text-zinc-500 font-bold text-[10px] uppercase tracking-widest mb-2">Forbidden Words</p>
                     {card.forbidden.map((word, i) => (
-                        <div key={i} className="text-xl sm:text-2xl font-black text-white/90 uppercase tracking-widest drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)]">{word}</div>
+                        <div 
+                            key={i} 
+                            className="font-black text-white/90 uppercase tracking-widest drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)] whitespace-nowrap overflow-hidden text-ellipsis"
+                            style={{ fontSize: `clamp(1rem, ${14 / Math.max(word.length, 1)}rem, 1.5rem)` }}
+                        >
+                            {word}
+                        </div>
                     ))}
                 </motion.div>
             </div>
@@ -118,20 +118,29 @@ export default function EvilExplain({ players, settings, onEnd }) {
 
   useEffect(() => {
     setDeck([...TABOO_DATA].sort(() => Math.random() - 0.5));
-    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
-    const mid = Math.ceil(shuffledPlayers.length / 2);
-    setTeams({ red: shuffledPlayers.slice(0, mid), blue: shuffledPlayers.slice(mid) });
-    setPhase('PRE');
-  }, [players]);
+    
+    let assignedPlayers = [...players];
+    if (settings?.teamGen !== 'custom') {
+        assignedPlayers = assignedPlayers.sort(() => Math.random() - 0.5);
+    }
+    
+    const mid = Math.ceil(assignedPlayers.length / 2);
+    setTeams({ red: assignedPlayers.slice(0, mid), blue: assignedPlayers.slice(mid) });
+    setPhase('TEAM_REVEAL'); 
+  }, [players, settings]);
 
+  // --- FIX: PERFECT DESCRIBER LOGIC ---
   useEffect(() => {
     if (phase === 'PRE') {
       const activeTeamPlayers = teams[currentTeam];
       if (activeTeamPlayers && activeTeamPlayers.length > 0) {
-        setDescriber(activeTeamPlayers[Math.floor(Math.random() * activeTeamPlayers.length)]);
+        // Because the teams were shuffled at the start, iterating by currentRound 
+        // guarantees randomness, no repeats, and everyone gets a turn!
+        const index = (currentRound - 1) % activeTeamPlayers.length;
+        setDescriber(activeTeamPlayers[index]);
       }
     }
-  }, [phase, currentTeam, teams]);
+  }, [phase, currentTeam, teams, currentRound]);
 
   useEffect(() => {
     if (phase === 'PLAYING' && timeLeft > 0) {
@@ -140,9 +149,11 @@ export default function EvilExplain({ players, settings, onEnd }) {
     } else if (phase === 'PLAYING' && timeLeft === 0) {
       if (navigator.vibrate) navigator.vibrate([200, 200, 200]);
       setScores(prev => ({ ...prev, [currentTeam]: prev[currentTeam] + turnScore }));
+      
+      setCardIndex(prev => (prev + 1) % deck.length); 
       setPhase('SUMMARY');
     }
-  }, [phase, timeLeft, currentTeam, turnScore]);
+  }, [phase, timeLeft, currentTeam, turnScore, deck.length]);
 
   const handleSwipe = (isRight) => {
     setSwipeDir(isRight ? 1 : -1);
@@ -176,6 +187,32 @@ export default function EvilExplain({ players, settings, onEnd }) {
 
   if (phase === 'SETUP') return <div className="flex-1 bg-[#050505]" />;
 
+  if (phase === 'TEAM_REVEAL') return (
+    <div className="h-full flex flex-col justify-center items-center p-6 bg-[#050505] w-full animate-fade-in overflow-hidden relative">
+        <h2 className="text-zinc-500 text-xs font-black uppercase tracking-[0.3em] mb-8">Teams Formed</h2>
+        
+        <div className="w-full max-w-sm space-y-6 mb-12 flex-1 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="bg-red-950/20 border border-red-500/20 rounded-3xl p-6 shadow-lg shadow-red-900/10">
+                <h2 className="text-red-500 font-black text-2xl mb-4 uppercase text-center tracking-tighter">Red Team</h2>
+                <div className="flex flex-wrap gap-2 justify-center">
+                    {teams.red.map(p => <span key={p} className="bg-red-500/10 text-red-200 border border-red-500/30 px-4 py-2 rounded-full text-sm font-bold uppercase whitespace-nowrap">{p}</span>)}
+                </div>
+            </div>
+
+            <div className="bg-blue-950/20 border border-blue-500/20 rounded-3xl p-6 shadow-lg shadow-blue-900/10">
+                <h2 className="text-blue-500 font-black text-2xl mb-4 uppercase text-center tracking-tighter">Blue Team</h2>
+                <div className="flex flex-wrap gap-2 justify-center">
+                    {teams.blue.map(p => <span key={p} className="bg-blue-500/10 text-blue-200 border border-blue-500/30 px-4 py-2 rounded-full text-sm font-bold uppercase whitespace-nowrap">{p}</span>)}
+                </div>
+            </div>
+        </div>
+
+        <button onClick={() => setPhase('PRE')} className="w-full max-w-sm py-4 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl active:scale-95 transition-all mt-auto shadow-xl">
+            Let's Go!
+        </button>
+    </div>
+  );
+
   if (phase === 'PRE') return (
     <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-[#050505] animate-fade-in w-full overflow-hidden">
         <h2 className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.3em] mb-4">Round {currentRound} of {settings.rounds}</h2>
@@ -185,14 +222,20 @@ export default function EvilExplain({ players, settings, onEnd }) {
         <h1 className={`text-4xl sm:text-5xl font-display font-black uppercase mb-12 tracking-tight ${teamColorClass}`}>
             {currentTeam} TEAM
         </h1>
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-6 w-full max-w-xs mb-12">
+        <div className="bg-white/5 border border-white/10 rounded-3xl p-6 w-full max-w-xs mb-12 flex flex-col items-center overflow-hidden">
             <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-1">Describer</p>
-            <h2 className="text-2xl font-black text-white mb-4 truncate px-2">{describer}</h2>
+            {/* --- FIX: SINGLE LINE SCALING PLAYER NAME --- */}
+            <h2 
+                className="font-black text-white mb-4 whitespace-nowrap overflow-hidden text-ellipsis w-full text-center px-2"
+                style={{ fontSize: `clamp(1rem, ${15 / Math.max(describer.length, 1)}rem, 2rem)` }}
+            >
+                {describer}
+            </h2>
             <div className="h-px w-full bg-white/10 mb-4" />
             <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-1">Guessers</p>
-            <p className={`font-bold ${teamColorClass}`}>Rest of {currentTeam} team</p>
+            <p className={`font-bold uppercase text-sm ${teamColorClass}`}>Rest of {currentTeam} team</p>
         </div>
-        <button onClick={startTurn} className={`btn-primary w-full max-w-xs text-white border-none ${teamBgClass}`}>
+        <button onClick={startTurn} className={`btn-primary w-full max-w-xs text-white border-none ${teamBgClass} shadow-xl`}>
             START TURN
         </button>
     </div>
@@ -210,11 +253,11 @@ export default function EvilExplain({ players, settings, onEnd }) {
         </AnimatePresence>
       </div>
       <div className="w-full grid grid-cols-2 gap-4 pb-6 mt-6 z-10">
-        <button onClick={() => handleSwipe(false)} className="py-4 rounded-3xl border border-red-500/20 bg-red-950/20 text-red-500 font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
-            <X size={20} /> WRONG
+        <button onClick={() => handleSwipe(false)} className="py-4 rounded-3xl border border-red-500/20 bg-red-950/20 text-red-500 font-black flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg">
+            <X size={20} /> SKIP
         </button>
-        <button onClick={() => handleSwipe(true)} className="py-4 rounded-3xl border border-green-500/20 bg-green-950/20 text-green-400 font-black flex items-center justify-center gap-2 active:scale-95 transition-all">
-            <Check size={20} /> CORRECT
+        <button onClick={() => handleSwipe(true)} className="py-4 rounded-3xl border border-green-500/20 bg-green-950/20 text-green-400 font-black flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg">
+            <Check size={20} /> GOT IT
         </button>
       </div>
     </div>
@@ -223,11 +266,11 @@ export default function EvilExplain({ players, settings, onEnd }) {
   if (phase === 'SUMMARY') return (
     <div className="h-full flex flex-col justify-center items-center p-6 text-center bg-[#050505] animate-fade-in w-full overflow-hidden">
         <h2 className="text-zinc-500 font-black uppercase tracking-widest mb-6">TIME'S UP!</h2>
-        <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-xs mb-12">
+        <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-xs mb-12 shadow-2xl">
             <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">{currentTeam} Scored</p>
             <h1 className={`text-6xl font-display font-black ${teamColorClass}`}>+{turnScore}</h1>
         </div>
-        <button onClick={handleNextTurn} className="btn-primary w-full max-w-xs bg-white text-black">
+        <button onClick={handleNextTurn} className="btn-primary w-full max-w-xs bg-white text-black shadow-xl">
             CONTINUE
         </button>
     </div>

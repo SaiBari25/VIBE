@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
-import { Quote, Crown, Clock, Check, X } from 'lucide-react';
+import { Quote, Crown, Clock, Check, X, Trophy } from 'lucide-react';
 import { HINGLISH_PACK } from '../data/hinglishData';
 
 // 🎨 Smooth, Continuous 2-Color Gradient (Gold/Yellow Theme)
@@ -214,9 +214,15 @@ export default function HinglishGame({ players, settings, onEnd }) {
             <Quote size={40} className="text-[#fbbf24] rotate-180" />
         </div>
         <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">Up Next</p>
-        <h1 className="text-4xl sm:text-5xl font-display font-black text-white uppercase mb-12 tracking-tight truncate w-full px-2">
+        
+        {/* --- FIX: DYNAMIC TEXT SCALING FOR LONG NAMES --- */}
+        <h1 
+            className="font-display font-black text-white uppercase mb-12 tracking-tight whitespace-nowrap overflow-visible w-full px-2"
+            style={{ fontSize: `clamp(1.5rem, ${25 / Math.max(currentPlayer.length, 1)}rem, 3.5rem)` }}
+        >
             {currentPlayer}
         </h1>
+
         <button onClick={() => { setTimeLeft(settings.timePerRound); setTurnPoints(0); setPhase('PLAYING'); }} className="btn-primary w-full max-w-xs bg-[#fbbf24] text-black border-none shadow-[0_0_20px_rgba(251,191,36,0.4)]">
             START TURN
         </button>
@@ -252,7 +258,7 @@ export default function HinglishGame({ players, settings, onEnd }) {
     <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-[#050505] animate-fade-in w-full overflow-hidden">
         <h2 className="text-zinc-500 font-black uppercase tracking-widest mb-6">TIME'S UP!</h2>
         <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-xs mb-12">
-            <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">{currentPlayer} Scored</p>
+            <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2 truncate px-2">{currentPlayer} Scored</p>
             <h1 className="text-6xl font-display font-black text-[#fbbf24]">+{turnPoints}</h1>
         </div>
         <button onClick={handleNextPlayer} className="btn-primary w-full max-w-xs bg-white text-black">
@@ -269,7 +275,12 @@ export default function HinglishGame({ players, settings, onEnd }) {
             <h2 className="text-zinc-500 text-xs font-black uppercase tracking-[0.3em] mb-2">FINAL RESULTS</h2>
             <div className="mb-8 w-full">
                 <p className="text-[#fbbf24] font-bold uppercase text-[10px] tracking-widest mb-2">Champion</p>
-                <h1 className="text-[12vw] sm:text-5xl font-display font-black text-white uppercase tracking-tight leading-none w-full truncate px-2">
+                
+                {/* --- FIX: DYNAMIC TEXT SCALING FOR CHAMPION NAME --- */}
+                <h1 
+                    className="font-display font-black text-white uppercase tracking-tight leading-none w-full whitespace-nowrap overflow-visible px-2"
+                    style={{ fontSize: `clamp(2rem, ${30 / Math.max(sorted[0][0].length, 1)}rem, 4rem)` }}
+                >
                     {sorted[0][0]}
                 </h1>
             </div>

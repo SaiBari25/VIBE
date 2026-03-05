@@ -90,7 +90,7 @@ const FlagCard = ({ flag, phase, onSwipe, custom }) => {
                                 <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">Country Name</p>
                                 <h2 
                                     className="font-display font-black text-white uppercase tracking-tight leading-none whitespace-nowrap w-full"
-                                    style={{ fontSize: flag?.name ? `min(2.5rem, ${15 / flag.name.length}rem)` : '2rem' }}
+                                    style={{ fontSize: flag?.name ? `clamp(1.5rem, ${200 / flag.name.length}px, 2.5rem)` : '2rem' }}
                                 >
                                     {flag?.name}
                                </h2>
@@ -179,9 +179,15 @@ export default function FlagGame({ players, settings, onEnd }) {
             <Globe size={40} className="text-green-500" />
         </div>
         <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">Up Next</p>
-        <h1 className="text-4xl sm:text-5xl font-display font-black text-white uppercase mb-12 tracking-tight truncate w-full px-2">
+        
+        {/* --- FIX: DYNAMIC TEXT SCALING --- */}
+        <h1 
+            className="font-display font-black text-white uppercase mb-12 tracking-tight whitespace-nowrap overflow-visible w-full px-2"
+            style={{ fontSize: `clamp(1.5rem, ${25 / Math.max(currentPlayer.length, 1)}rem, 3.5rem)` }}
+        >
             {currentPlayer}
         </h1>
+
         <button onClick={spin} className="btn-primary w-full max-w-xs bg-green-600 text-white border-none shadow-[0_0_20px_rgba(34,197,94,0.4)]">
             SPIN ROULETTE
         </button>
@@ -226,7 +232,15 @@ export default function FlagGame({ players, settings, onEnd }) {
             <h2 className="text-zinc-500 text-xs font-black uppercase tracking-[0.3em] mb-2">FINAL RESULTS</h2>
             <div className="mb-8 w-full">
                 <p className="text-green-500 font-bold uppercase text-[10px] tracking-widest mb-2">Champion</p>
-                <h1 className="text-[10vw] sm:text-5xl font-display font-black text-white uppercase tracking-tight leading-none w-full truncate px-2">{winner[0]}</h1>
+                
+                {/* --- FIX: DYNAMIC TEXT SCALING FOR CHAMPION --- */}
+                <h1 
+                    className="font-display font-black text-white uppercase tracking-tight leading-none w-full whitespace-nowrap overflow-visible px-2"
+                    style={{ fontSize: `clamp(2rem, ${30 / Math.max(winner[0].length, 1)}rem, 5rem)` }}
+                >
+                    {winner[0]}
+                </h1>
+
             </div>
             <div className="w-full max-w-xs space-y-3 mb-12 flex-1 overflow-y-auto no-scrollbar py-2">
                 {sortedScores.map(([name, score], index) => (

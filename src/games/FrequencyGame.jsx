@@ -167,9 +167,15 @@ export default function FrequencyGame({ players, settings, onEnd }) {
             <Users size={40} className="text-purple-500" />
         </div>
         <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">Up Next</p>
-        <h1 className="text-4xl sm:text-5xl font-display font-black text-white uppercase mb-12 tracking-tight truncate w-full px-2">
+        
+        {/* --- FIX: DYNAMIC TEXT SCALING FOR LONG NAMES --- */}
+        <h1 
+            className="font-display font-black text-white uppercase mb-12 tracking-tight whitespace-nowrap overflow-visible w-full px-2"
+            style={{ fontSize: `clamp(1.5rem, ${25 / Math.max(describer.length, 1)}rem, 3.5rem)` }}
+        >
             {describer}
         </h1>
+
         <button onClick={startSecretPhase} className="btn-primary w-full max-w-xs bg-purple-600 text-white border-none shadow-[0_0_20px_rgba(168,85,247,0.4)]">
             VIEW SECRET NUMBER
         </button>
@@ -179,7 +185,15 @@ export default function FrequencyGame({ players, settings, onEnd }) {
   if (phase === 'SECRET_NUMBER') return (
     <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-[#050505] animate-fade-in w-full">
         <EyeOff size={40} className="text-purple-500 mb-6" />
-        <h2 className="text-red-500 font-black uppercase text-[10px] tracking-widest mb-2">Only {describer} should look!</h2>
+        
+        {/* --- FIX: DYNAMIC SCALING FOR DESCRIBER NAME IN INSTRUCTION --- */}
+        <h2 
+            className="text-red-500 font-black uppercase text-[10px] tracking-widest mb-2 whitespace-nowrap px-2"
+            style={{ fontSize: `clamp(0.6rem, ${15 / Math.max(describer.length, 1)}rem, 1rem)` }}
+        >
+            Only {describer} should look!
+        </h2>
+        
         <div className="my-12">
             <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Your Secret Number Is</p>
             <h1 className="text-[25vw] sm:text-9xl font-display font-black text-white leading-none tracking-tighter">
@@ -203,8 +217,11 @@ export default function FrequencyGame({ players, settings, onEnd }) {
             </div>
         )}
 
-        <div className="text-center z-10 mb-8">
-            <h2 className="text-purple-400 font-bold uppercase text-xs tracking-widest mb-2">
+        <div className="text-center z-10 mb-8 w-full">
+            <h2 
+                className="text-purple-400 font-bold uppercase tracking-widest mb-2 truncate px-2"
+                style={{ fontSize: `clamp(0.6rem, ${15 / Math.max(describer.length, 1)}rem, 0.75rem)` }}
+            >
                 Read Category to {describer}
             </h2>
             <p className="text-zinc-500 text-[10px] uppercase font-bold max-w-[250px] mx-auto">
@@ -233,8 +250,13 @@ export default function FrequencyGame({ players, settings, onEnd }) {
 
   if (phase === 'SCORING') return (
     <div className="h-full flex flex-col p-6 items-center bg-[#050505] animate-fade-in w-full overflow-hidden">
-        <div className="text-center mb-6 mt-2">
-            <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-1">{describer}'s Number Was</p>
+        <div className="text-center mb-6 mt-2 w-full">
+            <p 
+                className="text-zinc-500 font-bold uppercase tracking-widest mb-1 truncate px-2"
+                style={{ fontSize: `clamp(0.5rem, ${12 / Math.max(describer.length, 1)}rem, 0.625rem)` }}
+            >
+                {describer}'s Number Was
+            </p>
             <h1 className="text-6xl font-display font-black text-white">{secretNumber}</h1>
         </div>
 
@@ -253,8 +275,13 @@ export default function FrequencyGame({ players, settings, onEnd }) {
                     );
                 })}
             </div>
-            <div className="mt-6 text-center border-t border-white/10 pt-4">
-                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{describer} gets</p>
+            <div className="mt-6 text-center border-t border-white/10 pt-4 w-full">
+                <p 
+                    className="text-zinc-500 font-bold uppercase tracking-widest truncate px-2"
+                    style={{ fontSize: `clamp(0.5rem, ${12 / Math.max(describer.length, 1)}rem, 0.625rem)` }}
+                >
+                    {describer} gets
+                </p>
                 <p className="text-purple-400 font-black text-xl">+{correctGuessers.length} Points</p>
             </div>
         </div>
@@ -274,7 +301,12 @@ export default function FrequencyGame({ players, settings, onEnd }) {
             <h2 className="text-zinc-500 text-xs font-black uppercase tracking-[0.3em] mb-2">FINAL RESULTS</h2>
             <div className="mb-8 w-full">
                 <p className="text-purple-500 font-bold uppercase text-[10px] tracking-widest mb-2">Champion</p>
-                <h1 className="text-[12vw] sm:text-5xl font-display font-black text-white uppercase tracking-tight leading-none w-full truncate px-2">
+                
+                {/* --- FIX: DYNAMIC TEXT SCALING FOR CHAMPION --- */}
+                <h1 
+                    className="font-display font-black text-white uppercase tracking-tight leading-none w-full whitespace-nowrap overflow-visible px-2"
+                    style={{ fontSize: `clamp(2rem, ${30 / Math.max(winner[0].length, 1)}rem, 4rem)` }}
+                >
                     {winner[0]}
                 </h1>
             </div>
