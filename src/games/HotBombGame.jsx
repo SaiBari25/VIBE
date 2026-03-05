@@ -101,9 +101,11 @@ export default function HotBombGame({ players, onEnd }) {
   const getRandomQuestion = () => HOT_BOMB_DATA[Math.floor(Math.random() * HOT_BOMB_DATA.length)];
 
   const startRound = () => {
-    const minFuse = 15;
-    const maxFuse = 20 + (players.length * 2);
+    // --- FIX: Random timer strictly between 5 and 60 seconds ---
+    const minFuse = 5;
+    const maxFuse = 60;
     setTimeLeft(Math.floor(Math.random() * (maxFuse - minFuse + 1)) + minFuse);
+    
     setCategory(getRandomQuestion());
     setIsExploding(false);
     setCurrentPlayerIndex(0);
@@ -135,8 +137,9 @@ export default function HotBombGame({ players, onEnd }) {
 
   const isLowTime = timeLeft <= 10;
   const isCriticalTime = timeLeft <= 5;
-  // This physically speeds up the spinning light border as the bomb gets closer to exploding!
   const rotationSpeed = isCriticalTime ? "0.5s" : isLowTime ? "1.5s" : "4s"; 
+  
+  const currentPlayerName = players[currentPlayerIndex];
 
   if (phase === 'PRE') return (
     <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-[#050505] w-full overflow-hidden">
@@ -170,10 +173,17 @@ export default function HotBombGame({ players, onEnd }) {
         bombKey={key}
       />
 
-      <div className="mt-16 text-center w-full max-w-xs z-10 pointer-events-none">
+      <div className="mt-16 text-center w-full max-w-xs z-10 pointer-events-none flex flex-col items-center">
         <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">Current Player</p>
-        <div className={`text-white font-black text-3xl bg-white/5 border px-6 py-4 rounded-3xl transition-all truncate w-full shadow-xl ${isLowTime ? 'border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-105' : 'border-white/10'}`}>
-            {players[currentPlayerIndex]}
+        
+        {/* --- FIX: DYNAMIC TEXT SCALING FOR CURRENT PLAYER --- */}
+        <div className={`flex items-center justify-center bg-white/5 border rounded-3xl transition-all w-full shadow-xl overflow-hidden h-[72px] px-4 ${isLowTime ? 'border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-105' : 'border-white/10'}`}>
+            <span 
+                className="text-white font-black whitespace-nowrap leading-none"
+                style={{ fontSize: `clamp(1rem, ${20 / Math.max(currentPlayerName.length, 1)}rem, 1.875rem)` }}
+            >
+                {currentPlayerName}
+            </span>
         </div>
       </div>
 
@@ -188,10 +198,19 @@ export default function HotBombGame({ players, onEnd }) {
                 KABOOM!
             </h1>
         </div>
-        <div className="bg-white/5 border border-white/10 p-6 rounded-3xl mb-12 w-full max-w-xs">
+        
+        <div className="bg-white/5 border border-white/10 p-6 rounded-3xl mb-12 w-full max-w-xs flex flex-col items-center overflow-hidden">
             <p className="text-zinc-500 text-[10px] font-bold uppercase mb-2">Eliminated</p>
-            <p className="text-white text-3xl font-black truncate px-2">{players[currentPlayerIndex]}</p>
+            
+            {/* --- FIX: DYNAMIC TEXT SCALING FOR ELIMINATED PLAYER --- */}
+            <p 
+                className="text-white font-black whitespace-nowrap w-full text-center px-2"
+                style={{ fontSize: `clamp(1.5rem, ${25 / Math.max(currentPlayerName.length, 1)}rem, 3rem)` }}
+            >
+                {currentPlayerName}
+            </p>
         </div>
+        
         <div className="w-full max-w-xs space-y-4">
             <button onClick={startRound} className="btn-primary w-full bg-red-600 text-white border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.4)] font-black">
                 TRY AGAIN

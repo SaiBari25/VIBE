@@ -71,9 +71,6 @@ const TabooCard = ({ card, onSwipe, custom }) => {
             
             <div className="relative z-30 flex w-full flex-col items-stretch min-h-[400px] p-8" style={{ transformStyle: "preserve-3d" }}>
                 
-                {/* --- FIX: STRICT 1-LINE DYNAMIC SIZING --- */}
-                {/* overflow-hidden and whitespace-nowrap force it to stay on one line.
-                    The inline style calculates fontSize based on character count so it never breaks the box! */}
                 <motion.div style={{ translateZ: 60 }} className="bg-white text-black w-full px-2 py-4 rounded-2xl mb-6 flex items-center justify-center h-[100px] shadow-[0_20px_40px_rgba(0,0,0,0.8)] pointer-events-none overflow-hidden box-border">
                     <h2 
                         className="font-display font-black uppercase leading-none whitespace-nowrap tracking-tighter"
@@ -129,13 +126,10 @@ export default function EvilExplain({ players, settings, onEnd }) {
     setPhase('TEAM_REVEAL'); 
   }, [players, settings]);
 
-  // --- FIX: PERFECT DESCRIBER LOGIC ---
   useEffect(() => {
     if (phase === 'PRE') {
       const activeTeamPlayers = teams[currentTeam];
       if (activeTeamPlayers && activeTeamPlayers.length > 0) {
-        // Because the teams were shuffled at the start, iterating by currentRound 
-        // guarantees randomness, no repeats, and everyone gets a turn!
         const index = (currentRound - 1) % activeTeamPlayers.length;
         setDescriber(activeTeamPlayers[index]);
       }
@@ -155,9 +149,16 @@ export default function EvilExplain({ players, settings, onEnd }) {
     }
   }, [phase, timeLeft, currentTeam, turnScore, deck.length]);
 
+  // --- BUG FIX: EVIL MODE SCORING LOGIC ADDED HERE ---
   const handleSwipe = (isRight) => {
     setSwipeDir(isRight ? 1 : -1);
-    if (isRight) setTurnScore(prev => prev + 1);
+    
+    if (isRight) {
+        setTurnScore(prev => prev + 1); // Point for correct
+    } else if (settings?.evilMode) {
+        setTurnScore(prev => prev - 1); // Penalty for skipping in Evil Mode
+    }
+    
     if (navigator.vibrate) navigator.vibrate(isRight ? 30 : [20, 50]);
     setCardIndex(prev => (prev + 1) % deck.length);
   };
@@ -224,7 +225,6 @@ export default function EvilExplain({ players, settings, onEnd }) {
         </h1>
         <div className="bg-white/5 border border-white/10 rounded-3xl p-6 w-full max-w-xs mb-12 flex flex-col items-center overflow-hidden">
             <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-1">Describer</p>
-            {/* --- FIX: SINGLE LINE SCALING PLAYER NAME --- */}
             <h2 
                 className="font-black text-white mb-4 whitespace-nowrap overflow-hidden text-ellipsis w-full text-center px-2"
                 style={{ fontSize: `clamp(1rem, ${15 / Math.max(describer.length, 1)}rem, 2rem)` }}
@@ -268,7 +268,10 @@ export default function EvilExplain({ players, settings, onEnd }) {
         <h2 className="text-zinc-500 font-black uppercase tracking-widest mb-6">TIME'S UP!</h2>
         <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-xs mb-12 shadow-2xl">
             <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest mb-2">{currentTeam} Scored</p>
-            <h1 className={`text-6xl font-display font-black ${teamColorClass}`}>+{turnScore}</h1>
+            {/* BUG FIX: Avoid showing "+-1" if score is negative */}
+            <h1 className={`text-6xl font-display font-black ${teamColorClass}`}>
+                {turnScore > 0 ? '+' : ''}{turnScore}
+            </h1>
         </div>
         <button onClick={handleNextTurn} className="btn-primary w-full max-w-xs bg-white text-black shadow-xl">
             CONTINUE
